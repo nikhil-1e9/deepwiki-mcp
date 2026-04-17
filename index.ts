@@ -1,55 +1,62 @@
-import { createMCPServer } from 'mcp-use/server'
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
+import express from "express";
 
-const server = createMCPServer('deepwiki-mcp', {
-  version: '1.0.0',
-  description: 'Ask questions about any public GitHub repo via DeepWiki',
-  baseUrl: process.env.MCP_URL,
-})
+const app = express();
+app.use(express.json());
+
+const server = new McpServer({
+  name: "deepwiki-mcp",
+  version: "1.0.0",
+});
 
 server.tool(
-  'ask_question',
+  "ask_question",
+  "Ask a question about any public GitHub repository",
   {
-    owner: {
-      type: 'string',
-      description: 'GitHub username or org (e.g. "openai")'
-    },
-    repo: {
-      type: 'string',
-      description: 'Repository name (e.g. "whisper")'
-    },
-    question: {
-      type: 'string',
-      description: 'Your question about the codebase'
-    }
+    owner: z.string().describe("GitHub username or org (e.g. 'openai')"),
+    repo: z.string().describe("Repository name (e.g. 'whisper')"),
+    question: z.string().describe("Your question about the codebase"),
   },
   async ({ owner, repo, question }) => {
-    const res = await fetch('https://mcp.deepwiki.com/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ owner, repo, question })
-    })
-    const data = await res.json()
+    const res = await fetch("https://mcp.deepwiki.com/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ owner, repo, question }),
+    });
+    const data = await res.json() as any;
     return {
-      content: [{ type: 'text', text: data.answer ?? JSON.stringify(data) }]
-    }
+      content: [{ type: "text" as const, text: data.answer ?? JSON.stringify(data) }],
+    };
   }
-)
+);
 
 server.tool(
-  'read_wiki_structure',
+  "read_wiki_structure",
+  "Get the documentation structure/table of contents for a GitHub repo",
   {
-    owner: { type: 'string', description: 'GitHub username or org' },
-    repo: { type: 'string', description: 'Repository name' }
+    owner: z.string().describe("GitHub username or org"),
+    repo: z.string().describe("Repository name"),
   },
   async ({ owner, repo }) => {
     const res = await fetch(
       `https://mcp.deepwiki.com/wiki/structure/${owner}/${repo}`
-    )
-    const data = await res.json()
+    );
+    const data = await res.json() as any;
     return {
-      content: [{ type: 'text', text: JSON.stringify(data, null, 2) }]
-    }
+      content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+    };
   }
-)
+);
 
-server.start()
+app.post("/mcp", async (req, res) => {
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`DeepWiki MCP server running on port ${PORT}`);
+});
