@@ -20,7 +20,15 @@ const propSchema = z.object({
 export const widgetMetadata = {
   description:
     "Render a polished DeepWiki answer card with the repo name, question, answer, and a follow-up button.",
-  inputs: propSchema,
+  props: propSchema,
+  appsSdkMetadata: {
+    "openai/widgetDescription":
+      "A styled DeepWiki answer card with the repository, question, answer, and follow-up controls.",
+    "openai/widgetAccessible": true,
+    "openai/resultCanProduceWidget": true,
+    "openai/toolInvocation/invoking": "Loading DeepWiki answer...",
+    "openai/toolInvocation/invoked": "DeepWiki answer ready",
+  },
 };
 
 type DeepWikiAnswerCardProps = z.infer<typeof propSchema>;
@@ -106,11 +114,36 @@ const DeepWikiAnswerCard: React.FC = () => {
   const [followUpSent, setFollowUpSent] = useState(false);
   const [followUpError, setFollowUpError] = useState<string | null>(null);
 
-  const owner = props.owner ?? output?.owner ?? "";
-  const repo = props.repo ?? output?.repo ?? "repository";
-  const question = props.question ?? output?.question ?? "";
-  const answer = props.answer ?? output?.answer ?? "";
-  const sourceUrl = props.sourceUrl ?? output?.sourceUrl;
+  const owner =
+    typeof props.owner === "string"
+      ? props.owner
+      : typeof output?.owner === "string"
+        ? output.owner
+        : "";
+  const repo =
+    typeof props.repo === "string"
+      ? props.repo
+      : typeof output?.repo === "string"
+        ? output.repo
+        : "repository";
+  const question =
+    typeof props.question === "string"
+      ? props.question
+      : typeof output?.question === "string"
+        ? output.question
+        : "";
+  const answer =
+    typeof props.answer === "string"
+      ? props.answer
+      : typeof output?.answer === "string"
+        ? output.answer
+        : "";
+  const sourceUrl =
+    typeof props.sourceUrl === "string"
+      ? props.sourceUrl
+      : typeof output?.sourceUrl === "string"
+        ? output.sourceUrl
+        : undefined;
 
   const repoLabel = owner ? `${owner}/${repo}` : repo;
 
