@@ -7,7 +7,8 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "langchain": "^0.3.33",
+    "@langchain/core": "^1.1.0",
+    "langchain": "^1.2.10",
     "mcp-use": "^1.5.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
