@@ -7,6 +7,7 @@ const server = new MCPServer({
   version: "1.0.0",
   description: "DeepWiki MCP wrapper with widget support",
   baseUrl: process.env.MCP_URL,
+  host: "0.0.0.0",
   autoCreateSessionOnInvalidId: true,
 });
 
