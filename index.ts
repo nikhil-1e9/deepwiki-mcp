@@ -60,6 +60,10 @@ function getTextFromToolResult(result: any): string {
   return "No text content returned.";
 }
 
+function toRepoName(owner: string, repo: string): string {
+  return `${owner}/${repo}`;
+}
+
 server.tool(
   {
     name: "ask_question",
@@ -72,9 +76,9 @@ server.tool(
   },
   async ({ owner, repo, question }) => {
     try {
+      const repoName = toRepoName(owner, repo);
       const result = await callDeepWikiTool("ask_question", {
-        owner,
-        repo,
+        repoName,
         question,
       });
       const answer = getTextFromToolResult(result);
@@ -86,12 +90,13 @@ server.tool(
           repo,
           question,
           answer,
-          sourceUrl: `https://deepwiki.com/${owner}/${repo}`,
+          sourceUrl: `https://deepwiki.com/${repoName}`,
         },
       };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown error calling DeepWiki.";
+      const repoName = toRepoName(owner, repo);
 
       return {
         content: [{ type: "text", text: `DeepWiki request failed: ${message}` }],
@@ -100,7 +105,7 @@ server.tool(
           repo,
           question,
           answer: `DeepWiki request failed: ${message}`,
-          sourceUrl: `https://deepwiki.com/${owner}/${repo}`,
+          sourceUrl: `https://deepwiki.com/${repoName}`,
         },
       };
     }
@@ -118,9 +123,9 @@ server.tool(
   },
   async ({ owner, repo }) => {
     try {
+      const repoName = toRepoName(owner, repo);
       const result = await callDeepWikiTool("read_wiki_structure", {
-        owner,
-        repo,
+        repoName,
       });
       const text = getTextFromToolResult(result);
 
@@ -130,12 +135,13 @@ server.tool(
           owner,
           repo,
           structure: text,
-          sourceUrl: `https://deepwiki.com/${owner}/${repo}`,
+          sourceUrl: `https://deepwiki.com/${repoName}`,
         },
       };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown error calling DeepWiki.";
+      const repoName = toRepoName(owner, repo);
 
       return {
         content: [{ type: "text", text: `DeepWiki request failed: ${message}` }],
@@ -143,7 +149,7 @@ server.tool(
           owner,
           repo,
           structure: `DeepWiki request failed: ${message}`,
-          sourceUrl: `https://deepwiki.com/${owner}/${repo}`,
+          sourceUrl: `https://deepwiki.com/${repoName}`,
         },
       };
     }
